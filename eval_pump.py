@@ -72,5 +72,5 @@ loss_test = np.concatenate(loss_test)
 roc_test = roc_auc_score(np.asarray(test_loader.dataset.label.values,dtype=int),loss_test)
 print("The ROC score on SWaT dataset is {}".format(roc_test))
 outdf = pd.DataFrame(predlist)
-outdf.to_csv('checkpoint/model/GANF_Test_anomaly.csv')
+outdf.to_csv('checkpoint/model/GANF_Test_anomaly.csv', index=False)
 # %%
