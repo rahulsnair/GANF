@@ -73,7 +73,7 @@ def load_water(root, batch_size,label=False):
     data = data.rename(columns={"Normal/Attack":"label"})
     data.label[data.label!="Normal"]=1
     data.label[data.label=="Normal"]=0
-    data["Timestamp"] = pd.to_datetime(data["Timestamp"])
+    data["Timestamp"] = pd.to_datetime(data["Timestamp"], format='ISO8601')
     data = data.set_index("Timestamp")
 
     #%%
@@ -169,3 +169,109 @@ class WaterLabel(Dataset):
         data = self.data[start:end].reshape([self.window_size,-1, 1])
 
         return torch.FloatTensor(data).transpose(0,1),self.label[index]
+
+
+def load_pump(root, batch_size, label=False):
+    data = pd.read_csv(root+'_Train.csv')
+    testdata = pd.read_csv(root+'_Test.csv')
+    data = data.rename(columns={"timestamp": "Timestamp"})
+    testdata = testdata.rename(columns={"timestamp": "Timestamp"})
+    data["Timestamp"] = pd.to_datetime(data["Timestamp"])
+    testdata["Timestamp"] = pd.to_datetime(testdata["Timestamp"])
+    data = data.set_index("Timestamp")
+    testdata = testdata.set_index("Timestamp")
+
+    # %%
+    feature = data.iloc[:, :-1]
+    mean_df = feature.mean(axis=0)
+    std_df = feature.std(axis=0)
+
+    norm_feature = (testdata.iloc[:, :-1] - mean_df) / std_df
+    test_norm_feature = (feature - mean_df) / std_df
+
+    norm_feature = norm_feature.dropna(axis=1)
+    test_norm_feature = test_norm_feature.dropna(axis=1)
+
+    n_sensor = len(norm_feature.columns)
+
+    train_df = norm_feature.iloc[:]
+    train_label = data.label.iloc[:]
+
+    test_df = test_norm_feature.iloc[:]
+    test_label = testdata.label.iloc[:]
+    if label:
+        train_loader = DataLoader(PumpLabel(train_df, train_label), batch_size=batch_size, shuffle=True)
+    else:
+        train_loader = DataLoader(Pump(train_df, train_label), batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(Pump(test_df, test_label), batch_size=batch_size, shuffle=False)
+
+    return train_loader, test_loader, n_sensor
+
+
+class Pump(Dataset):
+    def __init__(self, df, label, window_size=24, stride_size=1):
+        super(Pump, self).__init__()
+        self.df = df
+        self.window_size = window_size
+        self.stride_size = stride_size
+
+        self.data, self.idx, self.label = self.preprocess(df, label)
+
+    def preprocess(self, df, label):
+        start_idx = np.arange(0, len(df) - self.window_size, self.stride_size)
+        end_idx = np.arange(self.window_size, len(df), self.stride_size)
+
+        delat_time = df.index[end_idx] - df.index[start_idx]
+        idx_mask = delat_time == pd.Timedelta(self.window_size, unit='min')
+
+        return df.values, start_idx[idx_mask], label[start_idx[idx_mask]]
+
+    def __len__(self):
+        length = len(self.idx)
+
+        return length
+
+    def __getitem__(self, index):
+        #  N X K X L X D
+        start = self.idx[index]
+        end = start + self.window_size
+        data = self.data[start:end].reshape([self.window_size, -1, 1])
+
+        return torch.FloatTensor(data).transpose(0, 1)
+
+
+class PumpLabel(Dataset):
+    def __init__(self, df, label, window_size=24, stride_size=1):
+        super(PumpLabel, self).__init__()
+        self.df = df
+        self.window_size = window_size
+        self.stride_size = stride_size
+
+        self.data, self.idx, self.label = self.preprocess(df, label)
+        self.label = 1.0 - 2 * self.label
+
+    def preprocess(self, df, label):
+        start_idx = np.arange(0, len(df) - self.window_size, self.stride_size)
+        end_idx = np.arange(self.window_size, len(df), self.stride_size)
+
+        delat_time = df.index[end_idx] - df.index[start_idx]
+        idx_mask = delat_time == pd.Timedelta(self.window_size, unit='min')
+
+        return df.values, start_idx[idx_mask], label[start_idx[idx_mask]]
+
+    def __len__(self):
+        length = len(self.idx)
+
+        return length
+
+    def __getitem__(self, index):
+        #  N X K X L X D
+        start = self.idx[index]
+        end = start + self.window_size
+        data = self.data[start:end].reshape([self.window_size, -1, 1])
+
+        return torch.FloatTensor(data).transpose(0, 1), self.label[index]
+
+
+
+
