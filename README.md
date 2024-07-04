@@ -22,7 +22,7 @@ The paper uses three datasets for experiments:
 * **Metr-LA**: This traffic dataset does not include ground-truth outliers. It can be used for exploratory studies of density estimation. The dataset can be downloaded from [this GitHub](https://github.com/liyaguang/DCRNN).
 * **PMU**: This power grid dataset is proprietary and we are unable to offer it for public use.
 
-The fork of this repo uses Open Source Kaggle Pump Failure Data : https://www.kaggle.com/datasets/nphantawee/pump-sensor-data/data
+This fork uses Open Source Kaggle Pump Failure Data : https://www.kaggle.com/datasets/nphantawee/pump-sensor-data/data
 
 ## Experiments
 To train a GANF model on **SWaT**, run the bash script:
