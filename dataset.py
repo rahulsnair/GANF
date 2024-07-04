@@ -204,8 +204,9 @@ def load_pump(root, batch_size, label=False):
     else:
         train_loader = DataLoader(Pump(train_df, train_label), batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(Pump(test_df, test_label), batch_size=batch_size, shuffle=False)
+    final_test_loader = DataLoader(Pump(test_df, test_label), batch_size=1, shuffle=False)
 
-    return train_loader, test_loader, n_sensor
+    return train_loader, test_loader, n_sensor, final_test_loader
 
 
 class Pump(Dataset):

@@ -1,2 +1,5 @@
 /checkpoint/model
-**pycache**
+**.DS_Store
+models/__pycache__/GANF.cpython-38.pyc
+models/__pycache__/NF.cpython-38.pyc
+**/__pycache__**

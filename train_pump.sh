@@ -1,8 +1,5 @@
-for seed in {18..20}
-do 
-    python -u train_pump.py\
-        --seed=${seed}\
-        --name=GANF_pump_seed_${seed}
-done
+python -u train_pump.py\
+        --seed=2024\
+        --name=GANF_pump_seed_2024
 
 

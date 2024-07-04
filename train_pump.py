@@ -56,7 +56,7 @@ if args.cuda:
 print("Loading dataset")
 from dataset import load_pump
 
-train_loader, test_loader, n_sensor = load_pump(args.data_dir, \
+train_loader, test_loader, n_sensor, _ = load_pump(args.data_dir, \
                                                                 args.batch_size)
 #%%
 
